@@ -1,46 +1,73 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
 
 namespace TEST
 {
-    class Car
+    class Person : IComparable<Person> // IComparable<T> for using orderby in LINQ quiry
     {
-        private readonly string model;
-        private readonly int speed;
-        public Car() { }
-        public Car(string model, int speed)
-        { this.model = model; this.speed = speed; }
-        public override string ToString() => $"{this.model} is going {this.speed} MPH";
+        public string Name { get; set; }
+        public byte Age { get; set; }
+        public Person(string name, byte age)
+        {
+            Name = name;
+            Age = age;
+        }
+        public override string ToString() => $"{Name} is {Age} years old.";
+
+        public int CompareTo(Person p)
+        {
+            if (this.Age > p.Age)
+                return 1;
+            if (this.Age < p.Age)
+                return -1;
+            else return 0;
+        }
     }
+
+    class Room : IEnumerable //IEnumerable for apply OfType<>()
+    {
+        private ArrayList arrPeople = new ArrayList(0);
+        public int Capacity { get => arrPeople.Capacity; }
+        public Room() { }
+        public void AddPerson(string name, byte age)
+        {
+            arrPeople.Add(new Person(name, age));
+        }
+
+        // Special indexer for iteration in cycle "for" 
+        public Person this[int index]
+        {
+            get => (Person)arrPeople[index];
+            set => arrPeople.Insert(index, value);
+        }
+
+        public IEnumerator GetEnumerator()
+        { return arrPeople.GetEnumerator(); }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            Car c = new Car("Lancer", 230);
-            Console.WriteLine(c.ToString());
+            Room room = new Room();
+            room.AddPerson("Stewart", 23);
+            room.AddPerson("Bruce", 21);
+            room.AddPerson("Strepsils", 25);
+            room.AddPerson("Bankoker", 19);
 
-            // Create 50 000 items of Car
-            Car[] arr = new Car[50000];
-            for (int i = 0; i < arr.Length; i++)
-            {
-                arr[i] = new Car();
-            }
+            // example of using cycle "for" in Room type
+            for (int i = 0; i < room.Capacity/2; i++)
+            { Console.WriteLine(room[i]); }
 
-            // Start GC
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            //Transofrmation to IEnumerable<Person> for able to use LINQ
+            var roomEnum = room.OfType<Person>();
 
-            // Check 9000's item after GC
-            if (arr[9000] != null)
-            { Console.WriteLine("The generation of 9000's item: {0}", GC.GetGeneration(arr[9000])); }
-            else
-            { Console.WriteLine("9000's item deleted."); }
-
-            // Reflect some properties of GC and memory
-            Console.WriteLine("Max lvl of generation is {0}. Total count of generations is: {1}", GC.MaxGeneration, GC.MaxGeneration+1);
-            Console.WriteLine("Total memory of heap: {0} bytes", GC.GetTotalMemory(false));
-            Console.WriteLine("Numbers of collect 0 generation: {0}",GC.CollectionCount(0));
-            Console.WriteLine("Numbers of collect 1 generation: {0}", GC.CollectionCount(1));
-            Console.WriteLine("Numbers of collect 2 generation: {0}", GC.CollectionCount(2));
+            // LINQ quiry
+            Console.WriteLine("LINQ quiry:\n");
+            var subset = from person in roomEnum orderby person select person;
+            foreach (var item in subset)
+            { Console.WriteLine(item); }
         }
     }
 }
