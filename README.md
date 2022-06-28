@@ -1,3 +1,2 @@
-# Studying
-My studying repositorie.
-There is some practice.
+# Study
+My study repository.
