@@ -1,1 +1,1 @@
-Some exaples of data analysis and Machine Learning
+My projects from Yandex.Praktikum
